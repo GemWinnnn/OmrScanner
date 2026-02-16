@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Webcam from 'react-webcam'
 import {
+  Upload,
+  Camera,
   Loader2,
   CheckCircle2,
   XCircle,
   Minus,
   Image as ImageIcon,
 } from 'lucide-react'
-import { scanUploadedImage, getAnswerKeys, getClasses } from '../lib/api'
+import { scanUploadedImage, scanCameraCapture, getAnswerKeys, getClasses } from '../lib/api'
 import { ensureJpeg } from '../utils/imageConvert'
 
 interface BubbleDetail {
@@ -40,6 +43,7 @@ interface ClassOption {
 }
 
 export default function ScanPage() {
+  const [mode, setMode] = useState<'upload' | 'camera'>('upload')
   const [scanning, setScanning] = useState(false)
   const [result, setResult] = useState<ScanResultData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +55,7 @@ export default function ScanPage() {
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [selectedClassId, setSelectedClassId] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const webcamRef = useRef<Webcam>(null)
 
   useEffect(() => {
     getAnswerKeys()
@@ -106,13 +111,40 @@ export default function ScanPage() {
     [handleFile],
   )
 
+  const handleCapture = useCallback(async () => {
+    if (!webcamRef.current) return
+    const imageSrc = webcamRef.current.getScreenshot()
+    if (!imageSrc) return
+
+    setError(null)
+    setResult(null)
+    setPreviewUrl(imageSrc)
+    setScanning(true)
+    try {
+      const data = await scanCameraCapture(
+        imageSrc,
+        selectedAnswerKey?.answers,
+        undefined,
+        studentName || undefined,
+        selectedClassId || undefined,
+        selectedKeyId || undefined,
+      )
+      setResult(data)
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } }; message?: string }
+      setError(err?.response?.data?.detail || err?.message || 'Scan failed')
+    } finally {
+      setScanning(false)
+    }
+  }, [selectedAnswerKey, studentName, selectedClassId, selectedKeyId])
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Scan OMR Sheet</h1>
         <p className="text-gray-500 mt-1 text-sm sm:text-base">
-          Upload an image of an OMR answer sheet for scanning
+          Upload an image or use your camera to scan an OMR answer sheet
         </p>
       </div>
 
@@ -164,41 +196,97 @@ export default function ScanPage() {
         </div>
       </div>
 
+      {/* Mode Toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setMode('upload')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mode === 'upload'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <Upload className="h-4 w-4" />
+          Upload Image
+        </button>
+        <button
+          onClick={() => setMode('camera')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mode === 'camera'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <Camera className="h-4 w-4" />
+          Camera
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input Area */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div
-            className={`p-8 text-center border-2 border-dashed rounded-xl m-4 transition-colors cursor-pointer ${
-              dragOver
-                ? 'border-indigo-400 bg-indigo-50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onDragOver={(e) => {
-              e.preventDefault()
-              setDragOver(true)
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.heic,.heif"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0]
-                if (f) handleFile(f)
+          {mode === 'upload' ? (
+            <div
+              className={`p-8 text-center border-2 border-dashed rounded-xl m-4 transition-colors cursor-pointer ${
+                dragOver
+                  ? 'border-indigo-400 bg-indigo-50'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragOver(true)
               }}
-            />
-            <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">
-              Drop your OMR sheet image here
-            </p>
-            <p className="text-gray-400 text-sm mt-1">
-              or click to browse (JPEG, PNG, HEIC)
-            </p>
-          </div>
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.heic,.heif"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) handleFile(f)
+                }}
+              />
+              <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 font-medium">
+                Drop your OMR sheet image here
+              </p>
+              <p className="text-gray-400 text-sm mt-1">
+                or click to browse (JPEG, PNG)
+              </p>
+            </div>
+          ) : (
+            <div className="p-4">
+              <div className="relative rounded-lg overflow-hidden bg-black">
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={{
+                    facingMode: 'environment',
+                    width: 1280,
+                    height: 720,
+                  }}
+                  className="w-full"
+                />
+              </div>
+              <button
+                onClick={handleCapture}
+                disabled={scanning}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {scanning ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Camera className="h-5 w-5" />
+                )}
+                {scanning ? 'Scanning...' : 'Capture & Scan'}
+              </button>
+            </div>
+          )}
 
           {/* Preview / Annotated Image */}
           {(previewUrl || result?.annotated_image_base64) && (
