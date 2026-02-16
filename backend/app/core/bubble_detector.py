@@ -164,114 +164,92 @@ def detect_bubbles(
     # Create annotated image (color)
     annotated = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
-    # ── Phase 1: Extract all bubble mean intensities ──
-    all_q_vals: list[float] = []
-    all_q_strip_arrs: list[list[float]] = []
-    all_q_std_vals: list[float] = []
+    # Template-locked detection:
+    # For each question row, score each bubble at fixed coordinates and select the
+    # darkest/most filled candidate if confidence passes thresholds.
     bubble_intensities: dict[str, list[float]] = {}
-    all_q_fill_arrs: list[list[float]] = []
-
-    for field_block in template.field_blocks:
-        box_w, box_h = field_block.bubble_dimensions
-        # Inner-core mask: ignore printed bubble outline; focus on central fill region.
-        inner_mask = np.zeros((box_h, box_w), dtype=np.uint8)
-        cx, cy = box_w // 2, box_h // 2
-        radius = max(4, int(min(box_w, box_h) * 0.28))
-        cv2.circle(inner_mask, (cx, cy), radius, 255, -1)
-        inner_area = max(1, cv2.countNonZero(inner_mask))
-        for field_block_bubbles in field_block.traverse_bubbles:
-            q_strip_vals: list[float] = []
-            q_fill_vals: list[float] = []
-            for pt in field_block_bubbles:
-                x, y = pt.x + field_block.shift, pt.y
-                roi = img[y : y + box_h, x : x + box_w]
-                if roi.size > 0:
-                    val = float(cv2.mean(roi)[0])
-                else:
-                    val = 255.0
-                q_strip_vals.append(val)
-                if roi.size > 0:
-                    # Local adaptive mark signal:
-                    # threshold each bubble independently (Otsu) and measure
-                    # dark fill only in the inner core region.
-                    roi_blur = cv2.GaussianBlur(roi, (3, 3), 0)
-                    _, roi_bin_local = cv2.threshold(
-                        roi_blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
-                    )
-                    masked = cv2.bitwise_and(roi_bin_local, inner_mask)
-                    fill_ratio = float(cv2.countNonZero(masked)) / float(inner_area)
-                else:
-                    fill_ratio = 0.0
-                q_fill_vals.append(fill_ratio)
-
-            all_q_strip_arrs.append(q_strip_vals)
-            all_q_fill_arrs.append(q_fill_vals)
-            all_q_std_vals.append(round(float(np.std(q_strip_vals)), 2))
-            all_q_vals.extend(q_strip_vals)
-
-            # Store intensities by question label
-            if field_block_bubbles:
-                label = field_block_bubbles[0].field_label
-                bubble_intensities[label] = q_strip_vals
-
-    if not all_q_vals:
-        return {}, annotated, {}, 0, 0
-
-    # ── Phase 2: Compute thresholds ──
-    global_std_thresh, _, _ = get_global_threshold(all_q_std_vals)
-    global_thr, _, _ = get_global_threshold(all_q_vals, looseness=4)
-
-    # ── Phase 3: Detect marked bubbles ──
     omr_response: dict[str, str] = {}
     multi_marked_count = 0
     unmarked_count = 0
-    total_q_strip_no = 0
+
     for field_block in template.field_blocks:
         box_w, box_h = field_block.bubble_dimensions
 
+        # Central mask ignores printed bubble outline.
+        core_mask = np.zeros((box_h, box_w), dtype=np.uint8)
+        cx, cy = box_w // 2, box_h // 2
+        core_radius = max(4, int(min(box_w, box_h) * 0.28))
+        cv2.circle(core_mask, (cx, cy), core_radius, 255, -1)
+        core_area = max(1, cv2.countNonZero(core_mask))
+
+        # Ring mask estimates local background around the core.
+        outer_mask = np.zeros((box_h, box_w), dtype=np.uint8)
+        outer_radius = max(core_radius + 2, int(min(box_w, box_h) * 0.42))
+        cv2.circle(outer_mask, (cx, cy), outer_radius, 255, -1)
+        ring_mask = cv2.subtract(outer_mask, core_mask)
+        ring_area = max(1, cv2.countNonZero(ring_mask))
+
         for field_block_bubbles in field_block.traverse_bubbles:
-            no_outliers = all_q_std_vals[total_q_strip_no] < global_std_thresh
-            q_vals = all_q_strip_arrs[total_q_strip_no]
+            if not field_block_bubbles:
+                continue
 
-            per_q_strip_threshold = get_local_threshold(
-                q_vals,
-                global_thr,
-                no_outliers,
-            )
-            marked_indices = set(select_marked_indices(q_vals, per_q_strip_threshold))
+            label = field_block_bubbles[0].field_label
+            q_core_means: list[float] = []
+            q_scores: list[float] = []
 
-            # Secondary decision path for very bright/faint sheets:
-            # use darkest-pixel fill ratio per bubble.
-            q_fill_vals = all_q_fill_arrs[total_q_strip_no]
-            if q_fill_vals:
-                order_fill = sorted(range(len(q_fill_vals)), key=lambda i: q_fill_vals[i], reverse=True)
-                top_fill = q_fill_vals[order_fill[0]]
-                second_fill = q_fill_vals[order_fill[1]] if len(order_fill) > 1 else 0.0
-                fill_gap = top_fill - second_fill
-
-                # If threshold-based read found nothing but one bubble has clear fill lead,
-                # trust fill-ratio signal (helps light pencil marks on bright sheets).
-                if len(marked_indices) == 0 and top_fill >= 0.06 and fill_gap >= 0.015:
-                    marked_indices = {order_fill[0]}
-
-                # If threshold-based read marks too many, resolve to strongest fill.
-                if len(marked_indices) >= 2 and top_fill >= 0.07 and fill_gap >= 0.015:
-                    marked_indices = {order_fill[0]}
-
-            detected_bubbles = []
-            for idx, bubble in enumerate(field_block_bubbles):
-                bubble_is_marked = idx in marked_indices
-
+            for bubble in field_block_bubbles:
                 x, y = bubble.x + field_block.shift, bubble.y
+                roi = img[y : y + box_h, x : x + box_w]
 
-                if bubble_is_marked:
-                    detected_bubbles.append(bubble)
-                    # Draw filled green rectangle for detected bubbles
+                if roi.shape[0] != box_h or roi.shape[1] != box_w:
+                    q_core_means.append(255.0)
+                    q_scores.append(0.0)
+                    continue
+
+                roi_blur = cv2.GaussianBlur(roi, (3, 3), 0)
+                core_mean = float(cv2.mean(roi_blur, mask=core_mask)[0])
+                ring_mean = float(cv2.mean(roi_blur, mask=ring_mask)[0]) if ring_area > 0 else core_mean
+                contrast_darkness = max(0.0, ring_mean - core_mean)
+
+                # Per-bubble fill ratio from local Otsu threshold.
+                _, roi_bin = cv2.threshold(
+                    roi_blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
+                )
+                fill_ratio = float(cv2.countNonZero(cv2.bitwise_and(roi_bin, core_mask))) / float(core_area)
+
+                # Composite mark score:
+                # - contrast_darkness: filled centre should be darker than ring
+                # - fill_ratio: stronger fill contributes higher confidence
+                score = contrast_darkness + (fill_ratio * 85.0)
+
+                q_core_means.append(core_mean)
+                q_scores.append(score)
+
+            bubble_intensities[label] = q_core_means
+
+            # Pick darkest/strongest bubble in the row.
+            ranked = sorted(range(len(q_scores)), key=lambda i: q_scores[i], reverse=True)
+            best_idx = ranked[0]
+            best_score = q_scores[best_idx]
+            second_score = q_scores[ranked[1]] if len(ranked) > 1 else 0.0
+            score_gap = best_score - second_score
+
+            # Confidence gates:
+            # - absolute score floor avoids false positives on blank rows
+            # - score gap prefers a clear winner in the row
+            is_confident_mark = best_score >= 12.0 and (score_gap >= 1.5 or best_score >= 18.0)
+            chosen_idx = best_idx if is_confident_mark else None
+
+            for idx, bubble in enumerate(field_block_bubbles):
+                x, y = bubble.x + field_block.shift, bubble.y
+                is_marked = chosen_idx is not None and idx == chosen_idx
+
+                if is_marked:
                     cv2.rectangle(
                         annotated,
                         (int(x + box_w / 12), int(y + box_h / 12)),
                         (int(x + box_w - box_w / 12), int(y + box_h - box_h / 12)),
-                        (0, 200, 0),  # green
+                        (0, 200, 0),
                         3,
                     )
                     cv2.putText(
@@ -284,7 +262,6 @@ def detect_bubbles(
                         2,
                     )
                 else:
-                    # Draw light gray rectangle for unmarked bubbles
                     cv2.rectangle(
                         annotated,
                         (int(x + box_w / 10), int(y + box_h / 10)),
@@ -293,19 +270,10 @@ def detect_bubbles(
                         1,
                     )
 
-            # Build response
-            for bubble in detected_bubbles:
-                if bubble.field_label in omr_response:
-                    omr_response[bubble.field_label] += bubble.field_value
-                    multi_marked_count += 1
-                else:
-                    omr_response[bubble.field_label] = bubble.field_value
-
-            if len(detected_bubbles) == 0:
-                label = field_block_bubbles[0].field_label
+            if chosen_idx is None:
                 omr_response[label] = field_block.empty_val
                 unmarked_count += 1
-
-            total_q_strip_no += 1
+            else:
+                omr_response[label] = field_block_bubbles[chosen_idx].field_value
 
     return omr_response, annotated, bubble_intensities, multi_marked_count, unmarked_count

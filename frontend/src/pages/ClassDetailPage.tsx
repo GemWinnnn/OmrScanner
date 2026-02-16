@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import Webcam from 'react-webcam'
 import {
   ArrowLeft,
   Loader2,
@@ -15,7 +14,6 @@ import {
   CheckCircle2,
   XCircle,
   Minus,
-  Camera,
   Image as ImageIcon,
 } from 'lucide-react'
 import {
@@ -26,7 +24,6 @@ import {
   getResults,
   deleteResult,
   scanUploadedImage,
-  scanCameraCapture,
 } from '../lib/api'
 import { generateOMRPDF } from '../utils/pdfGenerator'
 import { exportGradesToExcel } from '../utils/excelExport'
@@ -99,14 +96,12 @@ export default function ClassDetailPage() {
   const [pdfGenerating, setPdfGenerating] = useState(false)
 
   // Scan state
-  const [scanMode, setScanMode] = useState<'upload' | 'camera'>('upload')
   const [studentName, setStudentName] = useState('')
   const [selectedKeyId, setSelectedKeyId] = useState('')
   const [scanning, setScanning] = useState(false)
   const [scanResult, setScanResult] = useState<ScanResultData | null>(null)
   const [scanError, setScanError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const webcamRef = useRef<Webcam>(null)
 
   // Grades state
   const [results, setResults] = useState<ResultRow[]>([])
@@ -307,35 +302,6 @@ export default function ClassDetailPage() {
       setScanning(false)
     }
     e.target.value = ''
-  }
-
-  async function handleCameraCapture() {
-    if (!webcamRef.current) return
-    const imageSrc = webcamRef.current.getScreenshot()
-    if (!imageSrc) return
-
-    setScanError(null)
-    setScanResult(null)
-    setPreviewUrl(imageSrc)
-    setScanning(true)
-    try {
-      const selectedKey = answerKeys.find((k) => k.id === selectedKeyId)
-      const data = await scanCameraCapture(
-        imageSrc,
-        selectedKey?.answers,
-        undefined,
-        studentName || undefined,
-        classId,
-        selectedKeyId || undefined,
-      )
-      setScanResult(data)
-      loadGrades()
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { detail?: string } }; message?: string }
-      setScanError(e?.response?.data?.detail || e?.message || 'Scan failed')
-    } finally {
-      setScanning(false)
-    }
   }
 
   function handleExportScanCSV() {
@@ -606,72 +572,24 @@ export default function ClassDetailPage() {
             </div>
           </div>
 
-          {/* Mode toggle */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setScanMode('upload')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                scanMode === 'upload'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <Upload className="h-4 w-4" />
-              Upload Image
-            </button>
-            <button
-              onClick={() => setScanMode('camera')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                scanMode === 'camera'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <Camera className="h-4 w-4" />
-              Camera
-            </button>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Input area */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              {scanMode === 'upload' ? (
-                <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-300 rounded-xl m-4 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors">
-                  <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleScanFile} />
-                  {scanning ? (
-                    <>
-                      <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                      <span className="text-sm font-medium text-indigo-600">Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ImageIcon className="h-10 w-10 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-600">Click to upload OMR sheet</span>
-                      <span className="text-xs text-gray-400">JPEG, PNG, HEIC</span>
-                    </>
-                  )}
-                </label>
-              ) : (
-                <div className="p-4">
-                  <div className="relative rounded-lg overflow-hidden bg-black">
-                    <Webcam
-                      ref={webcamRef}
-                      audio={false}
-                      screenshotFormat="image/jpeg"
-                      videoConstraints={{ facingMode: 'environment', width: 1280, height: 720 }}
-                      className="w-full"
-                    />
-                  </div>
-                  <button
-                    onClick={handleCameraCapture}
-                    disabled={scanning}
-                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {scanning ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
-                    {scanning ? 'Scanning...' : 'Capture & Scan'}
-                  </button>
-                </div>
-              )}
+              <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-300 rounded-xl m-4 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors">
+                <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleScanFile} />
+                {scanning ? (
+                  <>
+                    <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+                    <span className="text-sm font-medium text-indigo-600">Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="h-10 w-10 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-600">Click to upload OMR sheet</span>
+                    <span className="text-xs text-gray-400">JPEG, PNG, HEIC</span>
+                  </>
+                )}
+              </label>
 
               {/* Preview / Annotated */}
               {(previewUrl || scanResult?.annotated_image_base64) && (
