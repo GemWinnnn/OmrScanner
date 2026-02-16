@@ -393,16 +393,16 @@ export default function ClassDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <Link
           to="/classes"
-          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{classData.name}</h1>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{classData.name}</h1>
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 flex-wrap">
             {classData.subject && <span>{classData.subject}</span>}
             {classData.subject && classData.section && <span>|</span>}
             {classData.section && <span>{classData.section}</span>}
@@ -413,20 +413,21 @@ export default function ClassDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <div className="flex gap-1">
+      <div className="border-b border-gray-200 -mx-4 sm:mx-0 px-4 sm:px-0">
+        <div className="flex gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide">
           {tabs.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === key
                   ? 'border-indigo-600 text-indigo-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span className="hidden xs:inline sm:inline">{label}</span>
+              <span className="xs:hidden sm:hidden">{label.split(' ')[0]}</span>
             </button>
           ))}
         </div>
@@ -434,10 +435,10 @@ export default function ClassDetailPage() {
 
       {/* ═══ Answer Keys Tab ═══ */}
       {activeTab === 'answer-keys' && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Saved list */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 h-fit">
-            <h3 className="font-semibold text-gray-900 mb-3">Saved Answer Keys</h3>
+          <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 h-fit">
+            <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">Saved Answer Keys</h3>
             {akLoading ? (
               <div className="flex justify-center py-4">
                 <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
@@ -470,8 +471,8 @@ export default function ClassDetailPage() {
 
           {/* Editor */}
           <div className="lg:col-span-3 space-y-4">
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Answer Key Name</label>
                   <input
@@ -481,8 +482,8 @@ export default function ClassDetailPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
-                <div className="flex items-center gap-2 pt-6">
-                  <label className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors w-full sm:w-auto justify-center">
                     <Upload className="h-4 w-4" />
                     Import CSV
                     <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
@@ -497,20 +498,20 @@ export default function ClassDetailPage() {
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                <span className={`text-sm ${Object.keys(akAnswers).length === classTotalItems ? 'text-green-600 font-medium' : 'text-gray-500'}`}>{Object.keys(akAnswers).length}/{classTotalItems} answered</span>
+              <div className="px-3 sm:px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
+                <span className={`text-xs sm:text-sm ${Object.keys(akAnswers).length === classTotalItems ? 'text-green-600 font-medium' : 'text-gray-500'}`}>{Object.keys(akAnswers).length}/{classTotalItems} answered</span>
                 <button
                   onClick={handleSaveAnswerKey}
                   disabled={akSaving || Object.keys(akAnswers).length === 0}
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {akSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : akSaved ? <CheckCircle2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                   {akSaving ? 'Saving...' : akSaved ? 'Saved!' : 'Save'}
                 </button>
               </div>
-              <div className="p-4 max-h-[500px] overflow-y-auto">
-                <div className="grid gap-1 mb-2" style={{ gridTemplateColumns: '60px repeat(5, 1fr)' }}>
-                  <div className="text-xs font-medium text-gray-500 px-2">Q#</div>
+              <div className="p-2 sm:p-4 max-h-[500px] overflow-y-auto">
+                <div className="grid gap-0.5 sm:gap-1 mb-2" style={{ gridTemplateColumns: '40px repeat(5, 1fr)' }}>
+                  <div className="text-xs font-medium text-gray-500 px-1 sm:px-2">Q#</div>
                   {CHOICES.map((c) => (
                     <div key={c} className="text-xs font-medium text-gray-500 text-center">{c}</div>
                   ))}
@@ -518,15 +519,15 @@ export default function ClassDetailPage() {
                 {Array.from({ length: classTotalItems }, (_, i) => {
                   const q = `q${i + 1}`
                   return (
-                    <div key={q} className="grid gap-1 py-0.5" style={{ gridTemplateColumns: '60px repeat(5, 1fr)' }}>
-                      <div className="flex items-center px-2 text-sm font-medium text-gray-700">{i + 1}</div>
+                    <div key={q} className="grid gap-0.5 sm:gap-1 py-0.5" style={{ gridTemplateColumns: '40px repeat(5, 1fr)' }}>
+                      <div className="flex items-center px-1 sm:px-2 text-xs sm:text-sm font-medium text-gray-700">{i + 1}</div>
                       {CHOICES.map((choice) => {
                         const selected = akAnswers[q] === choice
                         return (
                           <button
                             key={choice}
                             onClick={() => handleBubbleClick(q, choice)}
-                            className={`h-8 rounded-full border-2 text-xs font-bold transition-all duration-150 ${
+                            className={`h-7 sm:h-8 rounded-full border-2 text-[10px] sm:text-xs font-bold transition-all duration-150 ${
                               selected
                                 ? 'bg-indigo-600 border-indigo-600 text-white scale-110'
                                 : 'bg-white border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500'
@@ -715,27 +716,27 @@ export default function ClassDetailPage() {
                 <>
                   {/* Score card */}
                   {scanResult.score !== null && scanResult.total !== null && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                           Score {studentName && <span className="text-gray-500 font-normal">- {studentName}</span>}
                         </h3>
                         <button
                           onClick={handleExportScanCSV}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors self-start sm:self-auto"
                         >
                           <Download className="h-3.5 w-3.5" />
                           Export CSV
                         </button>
                       </div>
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4 sm:gap-6">
                         <div className="flex-1">
-                          <div className="text-4xl font-bold text-indigo-600">
+                          <div className="text-3xl sm:text-4xl font-bold text-indigo-600">
                             {scanResult.score}/{scanResult.total}
                           </div>
-                          <div className="text-gray-500 mt-1">{scanResult.percentage}% correct</div>
+                          <div className="text-gray-500 mt-1 text-sm">{scanResult.percentage}% correct</div>
                         </div>
-                        <div className="text-right text-sm text-gray-500 space-y-1">
+                        <div className="text-right text-xs sm:text-sm text-gray-500 space-y-1">
                           <div>Multi-marked: {scanResult.multi_marked_count}</div>
                           <div>Unmarked: {scanResult.unmarked_count}</div>
                         </div>
@@ -831,12 +832,12 @@ export default function ClassDetailPage() {
       {/* ═══ Student Grades Tab ═══ */}
       {activeTab === 'grades' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Student Grades</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Student Grades</h3>
             {results.length > 0 && (
               <button
                 onClick={() => exportGradesToExcel(classData.name, results)}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
               >
                 <Download className="h-4 w-4" />
                 Export to Excel
@@ -855,15 +856,16 @@ export default function ClassDetailPage() {
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-3 text-left text-gray-600 font-medium">Student Name</th>
-                    <th className="px-4 py-3 text-center text-gray-600 font-medium">Score</th>
-                    <th className="px-4 py-3 text-center text-gray-600 font-medium">Total</th>
-                    <th className="px-4 py-3 text-center text-gray-600 font-medium">Percentage</th>
-                    <th className="px-4 py-3 text-left text-gray-600 font-medium">Date</th>
-                    <th className="px-4 py-3 text-center text-gray-600 font-medium w-16"></th>
+                    <th className="px-3 sm:px-4 py-3 text-left text-gray-600 font-medium">Student Name</th>
+                    <th className="px-3 sm:px-4 py-3 text-center text-gray-600 font-medium">Score</th>
+                    <th className="px-3 sm:px-4 py-3 text-center text-gray-600 font-medium">Total</th>
+                    <th className="px-3 sm:px-4 py-3 text-center text-gray-600 font-medium">Percentage</th>
+                    <th className="px-3 sm:px-4 py-3 text-left text-gray-600 font-medium">Date</th>
+                    <th className="px-3 sm:px-4 py-3 text-center text-gray-600 font-medium w-12 sm:w-16"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -873,16 +875,16 @@ export default function ClassDetailPage() {
                       : null
                     return (
                       <tr key={r.id} className="border-t border-gray-50 hover:bg-gray-50">
-                        <td className="px-4 py-3 text-gray-900 font-medium">
+                        <td className="px-3 sm:px-4 py-3 text-gray-900 font-medium">
                           {r.student_name || 'Unknown'}
                         </td>
-                        <td className="px-4 py-3 text-center text-gray-700">
+                        <td className="px-3 sm:px-4 py-3 text-center text-gray-700">
                           {r.score !== null ? r.score : '-'}
                         </td>
-                        <td className="px-4 py-3 text-center text-gray-700">
+                        <td className="px-3 sm:px-4 py-3 text-center text-gray-700">
                           {r.total !== null ? r.total : '-'}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-3 sm:px-4 py-3 text-center">
                           {pct !== null ? (
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                               pct >= 75 ? 'bg-green-100 text-green-700' :
@@ -893,10 +895,10 @@ export default function ClassDetailPage() {
                             </span>
                           ) : '-'}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {r.created_at ? new Date(r.created_at).toLocaleString() : '-'}
+                        <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">
+                          {r.created_at ? new Date(r.created_at).toLocaleDateString() : '-'}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-3 sm:px-4 py-3 text-center">
                           <button
                             onClick={() => handleDeleteResult(r.id)}
                             className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -910,6 +912,7 @@ export default function ClassDetailPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

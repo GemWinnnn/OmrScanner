@@ -75,17 +75,17 @@ const steps = [
 
 export default function InstructionsPage() {
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto">
       {/* Hero */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">How to Use OMR Scanner</h1>
-        <p className="text-gray-500 mt-2 text-lg">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">How to Use OMR Scanner</h1>
+        <p className="text-gray-500 mt-2 text-sm sm:text-lg">
           Follow these steps to create, scan, and grade your exams.
         </p>
       </div>
 
-      {/* Flow overview */}
-      <div className="flex items-center justify-center gap-2 flex-wrap">
+      {/* Flow overview - hidden on very small screens, shown as pills on md+ */}
+      <div className="hidden sm:flex items-center justify-center gap-2 flex-wrap">
         {steps.map((step, i) => {
           const Icon = step.icon
           return (
@@ -103,21 +103,21 @@ export default function InstructionsPage() {
       </div>
 
       {/* Detailed steps */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {steps.map((step) => {
           const Icon = step.icon
           return (
             <div key={step.number} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="flex items-start gap-4 p-6">
-                <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${step.color}`}>
-                  <Icon className="h-6 w-6" />
+              <div className="flex items-start gap-3 sm:gap-4 p-4 sm:p-6">
+                <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center ${step.color}`}>
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Step {step.number}</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mt-1">{step.title}</h3>
-                  <p className="text-gray-500 mt-1">{step.description}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mt-1">{step.title}</h3>
+                  <p className="text-gray-500 mt-1 text-sm sm:text-base">{step.description}</p>
                   <div className="mt-4 space-y-2">
                     {step.tips.map((tip, i) => (
                       <div key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -134,7 +134,7 @@ export default function InstructionsPage() {
       </div>
 
       {/* Tips section */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-6">
         <div className="flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>

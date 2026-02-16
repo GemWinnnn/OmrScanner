@@ -34,15 +34,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="w-full max-w-md px-6">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+      <div className="w-full max-w-md px-4 sm:px-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
           {/* Logo & Title */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-2xl mb-4">
-              <ScanLine className="h-8 w-8 text-indigo-600" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-indigo-100 rounded-2xl mb-4">
+              <ScanLine className="h-7 w-7 sm:h-8 sm:w-8 text-indigo-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">OMR Scanner</h1>
-            <p className="text-gray-500 mt-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">OMR Scanner</h1>
+            <p className="text-gray-500 mt-2 text-sm sm:text-base">
               Sign in to manage your classes, answer keys, and scan results
             </p>
           </div>

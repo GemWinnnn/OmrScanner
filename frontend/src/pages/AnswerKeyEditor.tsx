@@ -183,27 +183,27 @@ export default function AnswerKeyEditor() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Answer Key Editor</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Answer Key Editor</h1>
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">
             Click on a bubble to set the correct answer for each question
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <span className="text-xs sm:text-sm text-gray-500">
             {answeredCount}/{totalItems} answered
           </span>
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Download className="h-4 w-4" />
-            Export CSV
+            Export
           </button>
-          <label className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+          <label className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
             <Upload className="h-4 w-4" />
-            Import CSV
+            Import
             <input
               type="file"
               accept=".csv"
@@ -276,9 +276,9 @@ export default function AnswerKeyEditor() {
         {/* Editor Grid */}
         <div className="lg:col-span-3 space-y-4">
           {/* Name & Marking Scheme */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-              <div className="sm:col-span-1">
+          <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+              <div className="col-span-2 sm:col-span-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name
                 </label>
@@ -371,10 +371,10 @@ export default function AnswerKeyEditor() {
                 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
               </button>
             </div>
-            <div className="p-4 max-h-[600px] overflow-y-auto">
+            <div className="p-2 sm:p-4 max-h-[600px] overflow-y-auto">
               {/* Header Row */}
-              <div className="grid gap-1 mb-2" style={{ gridTemplateColumns: '60px repeat(5, 1fr)' }}>
-                <div className="text-xs font-medium text-gray-500 px-2">Q#</div>
+              <div className="grid gap-0.5 sm:gap-1 mb-2" style={{ gridTemplateColumns: '40px repeat(5, 1fr)' }}>
+                <div className="text-xs font-medium text-gray-500 px-1 sm:px-2">Q#</div>
                 {CHOICES.map((c) => (
                   <div key={c} className="text-xs font-medium text-gray-500 text-center">
                     {c}
@@ -387,10 +387,10 @@ export default function AnswerKeyEditor() {
                 return (
                   <div
                     key={q}
-                    className="grid gap-1 py-0.5"
-                    style={{ gridTemplateColumns: '60px repeat(5, 1fr)' }}
+                    className="grid gap-0.5 sm:gap-1 py-0.5"
+                    style={{ gridTemplateColumns: '40px repeat(5, 1fr)' }}
                   >
-                    <div className="flex items-center px-2 text-sm font-medium text-gray-700">
+                    <div className="flex items-center px-1 sm:px-2 text-xs sm:text-sm font-medium text-gray-700">
                       {i + 1}
                     </div>
                     {CHOICES.map((choice) => {
@@ -399,7 +399,7 @@ export default function AnswerKeyEditor() {
                         <button
                           key={choice}
                           onClick={() => handleBubbleClick(q, choice)}
-                          className={`h-8 rounded-full border-2 text-xs font-bold transition-all duration-150 ${
+                          className={`h-7 sm:h-8 rounded-full border-2 text-[10px] sm:text-xs font-bold transition-all duration-150 ${
                             selected
                               ? 'bg-indigo-600 border-indigo-600 text-white scale-110'
                               : 'bg-white border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500'

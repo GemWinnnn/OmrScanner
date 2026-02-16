@@ -142,8 +142,8 @@ export default function ScanPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Scan OMR Sheet</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Scan OMR Sheet</h1>
+        <p className="text-gray-500 mt-1 text-sm sm:text-base">
           Upload an image or use your camera to scan an OMR answer sheet
         </p>
       </div>
@@ -333,18 +333,18 @@ export default function ScanPage() {
             <>
               {/* Score Card */}
               {result.score !== null && result.total !== null && (
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Score</h3>
-                  <div className="flex items-center gap-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Score</h3>
+                  <div className="flex items-center gap-4 sm:gap-6">
                     <div className="flex-1">
-                      <div className="text-4xl font-bold text-indigo-600">
+                      <div className="text-3xl sm:text-4xl font-bold text-indigo-600">
                         {result.score}/{result.total}
                       </div>
-                      <div className="text-gray-500 mt-1">
+                      <div className="text-gray-500 mt-1 text-sm">
                         {result.percentage}% correct
                       </div>
                     </div>
-                    <div className="text-right text-sm text-gray-500 space-y-1">
+                    <div className="text-right text-xs sm:text-sm text-gray-500 space-y-1">
                       <div>Multi-marked: {result.multi_marked_count}</div>
                       <div>Unmarked: {result.unmarked_count}</div>
                     </div>
@@ -362,8 +362,8 @@ export default function ScanPage() {
               {/* Detailed Results */}
               {result.bubble_details.length > 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                  <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                       Question Details
                     </h3>
                   </div>
@@ -418,7 +418,7 @@ export default function ScanPage() {
                     </p>
                   </div>
                   <div className="max-h-96 overflow-y-auto p-4">
-                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                    <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-5 gap-2">
                       {Object.entries(result.detected_answers)
                         .sort(([a], [b]) => {
                           const na = parseInt(a.replace(/\D/g, '')) || 0
