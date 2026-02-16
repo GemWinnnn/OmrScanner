@@ -1,4 +1,4 @@
-// @ts-expect-error -- heic2any has no bundled types
+// @ts-ignore -- heic2any has no bundled types
 import heic2any from 'heic2any'
 
 const HEIC_TYPES = ['image/heic', 'image/heif']

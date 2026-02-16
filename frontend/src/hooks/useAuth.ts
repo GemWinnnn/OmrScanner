@@ -74,7 +74,7 @@ export function useAuth() {
       const timeout = setTimeout(() => {
         if (!loadingResolved.current) {
           // Fallback: try getSession one more time
-          supabase.auth.getSession().then(({ data: { session: s } }) => {
+          supabase!.auth.getSession().then(({ data: { session: s } }) => {
             updateUserFromSession(s)
             if (!loadingResolved.current) {
               loadingResolved.current = true

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, FileText, Trash2 } from 'lucide-react'
+import { Loader2, FileText } from 'lucide-react'
 import { getTemplates } from '../lib/api'
 
 interface TemplateRow {

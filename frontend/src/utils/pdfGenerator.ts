@@ -55,8 +55,8 @@ export const generateOMRPDF = async (exam: ExamInput | string): Promise<void> =>
           format: [612, 936],
           orientation: 'portrait',
         },
-      })
-      .from(page)
+      } as Record<string, unknown>)
+      .from(page as HTMLElement)
       .save()
 
     document.body.removeChild(container)
